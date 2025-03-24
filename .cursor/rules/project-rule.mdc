@@ -1,0 +1,48 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+1. Set Up the Project
++  Initialize the project and create the required directory structure.
++  Git Setup:
+   ++ A GitHub repository has already been created at git@github.com:ekrown-dev/web-app.git
+   ++ After initializing the project, sync with GitHub using:
+	echo "# website development" >> README.md
+	git init
+	git add README.md
+	git commit -m "first commit"
+	git branch -M main
+	git remote add origin git@github.com:ekrown-dev/web-app.git
+	git push -u origin main
+
+2. Frontend Setup (Next.js with TailwindCSS)
++  Use Next.js for a responsive frontend.
++  Set up TailwindCSS for styling.
++  Create reusable UI components (Navbar, ServiceCards, Testimonials, ContactForm).
++  Use 'public/' images provided for website background, hero section and logo.   
+
+3. Backend Setup (Express.js with Node.js)
++  Use Express.js with cors and dotenv.
++  Define API routes for services, team members, and contact form submissions.
+
+4. Setup a supabase local database as backend database
++  Use supabase CLI with npx
++  When a new migration is created, create table(s) to hold the data
++  Add seed data in 'supabase/seed.sql' file
++  Reset supabase database everything is done
++  Use 'npx' to run the commands.
+
+5. Git Ignore Sensitive Files
++  Before committing, ensure sensitive files are NOT tracked:
+   ++ Create a .gitignore file and add, for examples:
+	node_modules/
+	.env
+	.next/
+	__pycache__/
+	etc.
+++  Ensure .env is used for storing secrets (e.g., database credentials).
+
