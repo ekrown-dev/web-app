@@ -140,3 +140,75 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Contact
 
 eKROWN Technologies - contact@ekrown.com
+
+# Contact Form Admin Interface
+
+This project includes a secure admin interface for managing contact form submissions. The interface is protected by authentication and provides features for viewing, searching, and managing submissions.
+
+## Features
+
+- Secure admin authentication
+- View all contact form submissions
+- Search submissions by name, email, or message
+- Filter submissions by status (new, read, replied)
+- Update submission status
+- Responsive design with dark mode
+
+## Setup
+
+1. Create a Supabase project and get your project URL and anon key.
+
+2. Set up environment variables in `.env.local`:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+3. Run the Supabase migration to create the contact_submissions table:
+   ```bash
+   supabase db push
+   ```
+
+4. Create an admin user in Supabase:
+   - Go to your Supabase project dashboard
+   - Navigate to Authentication > Users
+   - Click "Invite user" and enter the admin's email
+   - Set a password for the admin user
+
+5. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Usage
+
+1. Access the admin interface at `/admin`
+2. Log in with your admin credentials
+3. View and manage contact form submissions
+
+## Security
+
+- The admin interface is protected by authentication
+- Only authenticated users can view and update submissions
+- Row Level Security (RLS) is enabled on the contact_submissions table
+- Public users can only submit new messages
+- Admin users can view and update all submissions
+
+## Database Schema
+
+The `contact_submissions` table has the following structure:
+
+- `id`: UUID (primary key)
+- `name`: TEXT (required)
+- `email`: TEXT (required)
+- `message`: TEXT (required)
+- `status`: TEXT (required, default: 'new', values: 'new', 'read', 'replied')
+- `created_at`: TIMESTAMP WITH TIME ZONE (required, default: current time)
+
+## Development
+
+The project uses:
+- Next.js 14 with App Router
+- Supabase for authentication and database
+- Tailwind CSS for styling
+- TypeScript for type safety

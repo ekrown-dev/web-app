@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import Image from "next/image";
 import "./globals.css";
-import Navbar from '@/components/Navbar'
+import NavbarWrapper from '@/components/NavbarWrapper';
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "eKROWN | Technologies",
-  description: "Professional IT Solutions and Services",
+  description: "Professional IT Services and Solutions",
   icons: {
     icon: '/eKROWN-logo.png',
   },
@@ -19,6 +19,9 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  // Check if the current path is under /admin
+  const isAdminPage = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+
   return (
     <html lang="en">
       <body className={`${inter.className} min-h-screen relative bg-[#040B24] overflow-x-hidden`}>
@@ -35,7 +38,7 @@ export default function RootLayout({
             className="absolute inset-0 bg-gradient-to-br from-[#040B24]/95 via-[#040B24]/85 to-[#040B24]/95 opacity-0 animate-gradient-fade"
           />
         </div>
-        <Navbar />
+        {!isAdminPage && <NavbarWrapper />}
         <main className="relative z-10">
           {children}
         </main>
