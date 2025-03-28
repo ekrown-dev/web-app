@@ -3,7 +3,7 @@
 # dependencies
 /node_modules
 /.pnp
-.pnp.*
+.pnp.js
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
@@ -50,7 +50,10 @@ yarn-error.log*
 
 # IDE
 .idea/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
 *.swp
 *.swo
 
@@ -60,6 +63,8 @@ yarn-error.log*
 .env.keys
 .env.local
 .env.*.local
+/supabase/.temp/
+/supabase/.branches/
 
 # OS generated files
 .DS_Store
@@ -69,3 +74,7 @@ yarn-error.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Logs
+logs
+*.log

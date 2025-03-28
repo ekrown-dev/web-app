@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -9,158 +9,135 @@ const supabase = createClient(
 );
 
 interface ContactSubmission {
-  id: string;
+  id: number;
   name: string;
   email: string;
   message: string;
+  status: string;
   created_at: string;
-  status: 'new' | 'read' | 'replied';
+  reply?: string;
 }
 
 export default function AdminDashboard() {
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'new' | 'read' | 'replied'>('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState<{ [key: number]: string }>({});
+  const [replying, setReplying] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
-    const fetchSubmissions = async () => {
-      try {
-        console.log('Fetching submissions...');
-        const { data, error } = await supabase
-          .from('contact_submissions')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        console.log('Submissions fetched:', data);
-        setSubmissions(data || []);
-      } catch (error) {
-        console.error('Error fetching submissions:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchSubmissions();
   }, []);
 
-  const updateSubmissionStatus = async (id: string, status: ContactSubmission['status']) => {
+  const fetchSubmissions = async () => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('contact_submissions')
-        .update({ status })
-        .eq('id', id);
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      setSubmissions(prev =>
-        prev.map(submission =>
-          submission.id === id ? { ...submission, status } : submission
-        )
-      );
-    } catch (error) {
-      console.error('Error updating submission:', error);
+      setSubmissions(data || []);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filteredSubmissions = submissions.filter(submission => {
-    const matchesSearch = 
-      submission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      submission.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      submission.message.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === 'all' || submission.status === filterStatus;
-    
-    return matchesSearch && matchesStatus;
-  });
+  const handleReply = async (submissionId: number) => {
+    try {
+      setReplying({ ...replying, [submissionId]: true });
+      
+      // Update the submission with the reply
+      const { error: updateError } = await supabase
+        .from('contact_submissions')
+        .update({ 
+          reply: replyText[submissionId],
+          status: 'replied'
+        })
+        .eq('id', submissionId);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="text-white">Loading submissions...</div>
-      </div>
-    );
+      if (updateError) throw updateError;
+
+      // Send the email (you'll need to implement this with your email service)
+      const submission = submissions.find(s => s.id === submissionId);
+      if (submission) {
+        // TODO: Implement email sending functionality
+        console.log('Would send email to:', submission.email, 'with reply:', replyText[submissionId]);
+      }
+
+      // Refresh the submissions list
+      await fetchSubmissions();
+      
+      // Clear the reply text for this submission
+      setReplyText({ ...replyText, [submissionId]: '' });
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setReplying({ ...replying, [submissionId]: false });
+    }
+  };
+
+  if (loading) {
+    return <div className="text-white text-center py-8">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center py-8">Error: {error}</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-white">Contact Form Submissions</h1>
-        <div className="flex space-x-4">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="bg-[#0A0F2C] text-white border border-gray-700 rounded-md px-3 py-2"
-          >
-            <option value="all">All Status</option>
-            <option value="new">New</option>
-            <option value="read">Read</option>
-            <option value="replied">Replied</option>
-          </select>
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-[#0A0F2C] text-white border border-gray-700 rounded-md px-3 py-2"
-          />
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold text-white mb-6">Contact Submissions</h1>
+      <div className="grid gap-6">
+        {submissions.map((submission) => (
+          <div key={submission.id} className="bg-[#0A0F2C] p-6 rounded-lg shadow-lg border border-gray-800">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">{submission.name}</h3>
+                <p className="text-gray-400">{submission.email}</p>
+                <p className="text-gray-300 mt-2">{submission.message}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  {new Date(submission.created_at).toLocaleString()}
+                </p>
+              </div>
+              <span className={`px-2 py-1 rounded text-sm ${
+                submission.status === 'new' ? 'bg-blue-500/10 text-blue-500' :
+                submission.status === 'replied' ? 'bg-green-500/10 text-green-500' :
+                'bg-gray-500/10 text-gray-500'
+              }`}>
+                {submission.status}
+              </span>
+            </div>
 
-      <div className="bg-[#0A0F2C] rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-700">
-          <thead className="bg-[#0A0F2C]">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Message</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-700">
-            {filteredSubmissions.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-400">
-                  No submissions found
-                </td>
-              </tr>
-            ) : (
-              filteredSubmissions.map((submission) => (
-                <tr key={submission.id} className="hover:bg-[#0A0F2C]/50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{submission.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">{submission.email}</td>
-                  <td className="px-6 py-4 text-sm text-white max-w-md truncate">{submission.message}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      submission.status === 'new' ? 'bg-green-100 text-green-800' :
-                      submission.status === 'read' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {submission.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                    {new Date(submission.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                    <select
-                      value={submission.status}
-                      onChange={(e) => updateSubmissionStatus(submission.id, e.target.value as ContactSubmission['status'])}
-                      className="bg-[#0A0F2C] text-white border border-gray-700 rounded-md px-2 py-1"
-                    >
-                      <option value="new">New</option>
-                      <option value="read">Read</option>
-                      <option value="replied">Replied</option>
-                    </select>
-                  </td>
-                </tr>
-              ))
+            {submission.reply && (
+              <div className="mt-4 p-4 bg-indigo-500/10 rounded border border-indigo-500">
+                <h4 className="text-sm font-semibold text-indigo-400 mb-2">Your Reply:</h4>
+                <p className="text-gray-300">{submission.reply}</p>
+              </div>
             )}
-          </tbody>
-        </table>
+
+            <div className="mt-4">
+              <textarea
+                className="w-full p-3 rounded bg-[#040B24] border border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                rows={3}
+                placeholder="Write your reply..."
+                value={replyText[submission.id] || ''}
+                onChange={(e) => setReplyText({ ...replyText, [submission.id]: e.target.value })}
+              />
+              <div className="mt-2 flex justify-end">
+                <button
+                  onClick={() => handleReply(submission.id)}
+                  disabled={!replyText[submission.id] || replying[submission.id]}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {replying[submission.id] ? 'Sending...' : 'Send Reply'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

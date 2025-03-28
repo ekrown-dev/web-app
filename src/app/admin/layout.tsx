@@ -31,14 +31,14 @@ export default function AdminLayout({
         
         if (!session) {
           console.log('No session found, redirecting to login...');
-          router.push('/admin/login');
+          router.push('/login');
         } else {
           console.log('Session found, setting authenticated...');
           setIsAuthenticated(true);
         }
       } catch (error) {
         console.error('Auth check error:', error);
-        router.push('/admin/login');
+        router.push('/login');
       } finally {
         setIsLoading(false);
       }
@@ -57,7 +57,7 @@ export default function AdminLayout({
   };
 
   // If we're on the login page, render it without the admin layout
-  const isLoginPage = typeof window !== 'undefined' && window.location.pathname === '/admin/login';
+  const isLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
   if (isLoginPage) {
     return children;
   }

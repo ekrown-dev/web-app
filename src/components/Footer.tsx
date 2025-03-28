@@ -58,9 +58,9 @@ export default function Footer() {
           <div>
             <h3 className="text-white text-lg font-semibold mb-4">Contact Us</h3>
             <ul className="space-y-2 text-gray-400">
-              <li>123 Tech Street</li>
-              <li>Silicon Valley, CA 94025</li>
-              <li>Phone: (555) 123-4567</li>
+              <li>3 rue des Tulipiers</li>
+              <li>GRADIGNAN 33170 FR</li>
+              <li>Phone: 09 54 56 00 40</li>
               <li>Email: info@ekrown.com</li>
             </ul>
           </div>
